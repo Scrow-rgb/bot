@@ -2,9 +2,6 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 
-
-
-
 class Server_Canal(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -99,11 +96,7 @@ class Server_Canal(commands.Cog):
                 embed = discord.Embed(title=mensagem)
                 embed.set_thumbnail(url=membro.avatar.url if membro.avatar else discord.Embed.Empty)
                 await canal.send(embed=embed)
-    
-    
-    @commands.Cog.listener()
-    async def on_guild_channel_create(self, canal:discord.abc.GuildChannel):
-        await canal.send(f'Novo canal criado: {canal.name}')
+
         
     
 async def setup(bot):
