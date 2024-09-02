@@ -4,11 +4,7 @@ from discord.ext import commands
 from yt_dlp import YoutubeDL
 
 
-class TutorialButton(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-        self.value = None
-        self.timeout=600
+
 
 
 class Music(commands.Cog):
@@ -75,7 +71,7 @@ class Music(commands.Cog):
     @app_commands.command(name="ajuda",description="Mostre um comando de ajuda.")
     async def help(self,interaction:discord.Interaction):
         await interaction.response.defer(thinking=True)
-        helptxt = "`/ajuda` - Veja esse guia!\n`/play` - Toque uma música do YouTube!\n`/fila` - Veja a fila de músicas na Playlist\n`/pular` - Pule para a próxima música da fila\n `/clear` -Limpa até 100 mensagens do chat\n `/escrever` - Escreve o que você digitar\n `/ola` - Veja uma saudação para você\n `/somar` - Realiza a soma de dois números\n `/sub` - Realiza uma subratação de dois números\n `/div` - Realiza a divisão de dois números\n `/mult` - Realiza a multiplicação de dois números"
+        helptxt = "`/ajuda` - Veja esse guia!\n`/play` - Toque uma música do YouTube!\n`/fila` - Veja a fila de músicas na Playlist\n`/pular` - Pule para a próxima música da fila\n `/clear` -Limpa até 100 mensagens do chat\n `/escrever` - Escreve o que você digitar\n `/ola` - Veja uma saudação para você"
         embedhelp = discord.Embed(
             colour = 1646116,#grey
             title=f'Comandos do {self.client.user.name}',
@@ -85,9 +81,9 @@ class Music(commands.Cog):
             embedhelp.set_thumbnail(url=self.client.user.avatar.url)
         except:
             pass
-        await interaction.followup.send(embed=embedhelp,view=TutorialButton())
+        await interaction.followup.send(embed=embedhelp)
 
-    @app_commands.command(name='leave', description='Sai do canal que está')
+    @app_commands.command(name='sair', description='Sai do canal que está')
     async def leave(self, interact:discord.Interaction):
         voice_client = interact.guild.voice_client
         if voice_client and voice_client.is_connected():
@@ -97,7 +93,7 @@ class Music(commands.Cog):
             await interact.response.send_message("O bot não está conectado a nenhum canal de voz.", ephemeral=True)
     
     
-    @app_commands.command(name="play",description="Toca uma música do YouTube.")
+    @app_commands.command(name="tocar",description="Toca uma música do YouTube.")
     @app_commands.describe(
         busca = "Digite o nome da música no YouTube"
     )
@@ -127,9 +123,9 @@ class Music(commands.Cog):
             else:
                 embedvc = discord.Embed(
                     colour= 32768,#green
-                    description = f"Você adicionou a música **{song['title']}** à fila!"
+                    description = f"Tocando agora**{song['title']}** e adicionado a fila!"
                 )
-                await interaction.followup.send(embed=embedvc,view=TutorialButton())
+                await interaction.followup.send(embed=embedvc)
                 self.music_queue.append([song, voice_channel])
                 
                 if self.is_playing == False:

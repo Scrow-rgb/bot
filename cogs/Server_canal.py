@@ -1,103 +1,94 @@
-import discord 
+import discord
 from discord.ext import commands
+import json
+import os
 from discord import app_commands
 
 class Server_Canal(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        super().__init__
-    
+        self.channel_settings = self.load_channel_settings()  # Carregar configurações ao iniciar o bot
+
+    def load_channel_settings(self):
+        """Carrega configurações de canal de um arquivo JSON."""
+        if os.path.exists('channel_settings.json'):
+            with open('channel_settings.json', 'r') as f:
+                return json.load(f)
+        else:
+            return {}
+
+    def save_channel_settings(self):
+        """Salva as configurações de canal em um arquivo JSON."""
+        with open('channel_settings.json', 'w') as f:
+            json.dump(self.channel_settings, f)
+
+    @app_commands.command(name='set_welcome_channel')
+    @commands.has_permissions(administrator=True)
+    async def set_welcome_channel(self, interact:discord.Interaction, channel: discord.TextChannel):
+        """Define o canal de boas-vindas para o servidor."""
+        guild_id = str(interact.guild.id)
+        if guild_id not in self.channel_settings:
+            self.channel_settings[guild_id] = {}
+
+        self.channel_settings[guild_id]['welcome_channel'] = channel.id
+        self.save_channel_settings()
+        print(f'O canal de entrada é {channel.name}')
+        await interact.response.send_message(f'Canal de boas-vindas definido para {channel.mention}.', ephemeral=True)
+
+    @app_commands.command(name='set_leave_channel')
+    @commands.has_permissions(administrator=True)
+    async def set_leave_channel(self, interact:discord.Interaction, channel: discord.TextChannel):
+        """Define o canal de saída para o servidor."""
+        guild_id = str(interact.guild.id)
+        if guild_id not in self.channel_settings:
+            self.channel_settings[guild_id] = {}
+
+        self.channel_settings[guild_id]['leave_channel'] = channel.id
+        self.save_channel_settings()
+        print(f'O canal de saída é {channel.name}')
+        await interact.response.send_message(f'Canal de saída definido para {channel.mention}.', ephemeral=True)
+
     @commands.Cog.listener()
     async def on_member_join(self, membro: discord.Member):
-        # Verifica se o membro é um bot
-        if membro.bot:
-            # Lista todos os cargos disponíveis para depuração
-            print(f"Lista de cargos no servidor '{membro.guild.name}':")
-            for r in membro.guild.roles:
-                print(f"- {r.name} (ID: {r.id})")
+        guild_id = str(membro.guild.id)
+        welcome_channel_id = self.channel_settings.get(guild_id, {}).get('welcome_channel')
 
-            # Tenta encontrar o cargo "BOT"
-            role = discord.utils.get(membro.guild.roles, name='BOT')
-
-            if role is None:
-                print(f"Erro: Cargo 'BOT' não encontrado no servidor '{membro.guild.name}' (ID: {membro.guild.id})")
-            else:
-                try:
-                    await membro.add_roles(role)
-                    print(f"Cargo '{role.name}' atribuído ao bot {membro.name}.")
-                except discord.Forbidden:
-                    print(f"Erro: O bot não tem permissão para atribuir o cargo '{role.name}' ao bot {membro.name}.")
-                except Exception as e:
-                    print(f"Erro inesperado ao tentar atribuir o cargo: {e}")
-                    
-             #Verifica se o membro não é um bot e tenta atribuir o cargo 'membro'
-        else:
-            role = discord.utils.get(membro.guild.roles, name='membro')
-            
-            if role is None:
-                print(f"Erro: Cargo 'membro' não encontrado no servidor '{membro.guild.name}' (ID: {membro.guild.id})")
-            else:
-                try:
-                    await membro.add_roles(role)
-                    print(f"Cargo '{role.name}' atribuído ao membro {membro.name}.")
-                except discord.Forbidden:
-                    print(f"Erro: O bot não tem permissão para atribuir o cargo '{role.name}' ao membro {membro.name}.")
-                except Exception as e:
-                    print(f"Erro inesperado ao tentar atribuir o cargo: {e}")
-
-
-        # Mapeamento de guilda para canais específicos
-        guild_channel_map = {
-            1123842079169192016: 1278099632974463088,  # Guild 1 -> Canal 1
-            876497016904118342: 876499665682567199,    # Guild 2 -> Canal 2
-            858532031855853578: 1278411121954390068,   # Guild 3 -> Canal 3
-        }
-
-        # Mensagem de boas-vindas
-        mensagem = f'Bem-vindo, {membro.name}!!'
-
-        # Obtém o ID da guild (servidor) onde o evento ocorreu
-        guild_id = membro.guild.id
-
-        # Verifica se o servidor está no mapeamento e obtém o canal correspondente
-        if guild_id in guild_channel_map:
-            channel_id = guild_channel_map[guild_id]
-            canal = self.bot.get_channel(channel_id)
-
-            if canal:
+        if welcome_channel_id:
+            channel = self.bot.get_channel(welcome_channel_id)
+            if channel:
+                mensagem = f'Bem-vindo, {membro.name}!!'
                 embed = discord.Embed(title=mensagem, description='Aproveite a estadia')
                 avatar_url = membro.avatar.url if membro.avatar else discord.Embed.Empty
                 embed.set_thumbnail(url=avatar_url)
-                await canal.send(embed=embed)
+                await channel.send(embed=embed)
             else:
-                print(f"Canal com ID {channel_id} não encontrado.")
+                print(f"Canal de boas-vindas com ID {welcome_channel_id} não encontrado.")
         else:
-            print(f"Guild com ID {guild_id} não está no mapeamento.")
-        
-    
+            print(f"Canal de boas-vindas não está configurado para o servidor '{membro.guild.name}'.")
+
     @commands.Cog.listener()
-    async def on_member_remove(self, membro:discord.Member):
-        
-        guild_channel_map = {
-            1123842079169192016: 1278099648401113139, # Guild 1 -> Canal 1
-            876497016904118342: 876499665682567199,   # Guild 2 -> Canal 2
-            858532031855853578: 1278413819168686192,  # Guild 3 -> Canal 3
-        }
-        mensagem = f'{membro.name} Saiu do servidor\nJá vai tarde otário!!'
-        # Obtém o ID da guild (servidor) onde o evento ocorreu
-        guild_id = membro.guild.id
-        
-         # Verifica se o servidor está no mapeamento
-        if guild_id in guild_channel_map:
-            channel_id = guild_channel_map[guild_id]
-            canal = self.bot.get_channel(channel_id)
-        
-        if canal:
+    async def on_member_remove(self, membro: discord.Member):
+        guild_id = str(membro.guild.id)
+        leave_channel_id = self.channel_settings.get(guild_id, {}).get('leave_channel')
+
+        if leave_channel_id:
+            channel = self.bot.get_channel(leave_channel_id)
+            if channel:
+                mensagem = f'{membro.name} saiu do servidor. Já vai tarde!'
                 embed = discord.Embed(title=mensagem)
                 embed.set_thumbnail(url=membro.avatar.url if membro.avatar else discord.Embed.Empty)
+<<<<<<< HEAD
                 await canal.send(embed=embed)
 
         
     
+=======
+                await channel.send(embed=embed)
+            else:
+                print(f"Canal de saída com ID {leave_channel_id} não encontrado.")
+        else:
+            print(f"Canal de saída não está configurado para o servidor '{membro.guild.name}'.")
+
+>>>>>>> 6e6396b0d058c0584b67c22eef78a9a63edb09f8
 async def setup(bot):
     await bot.add_cog(Server_Canal(bot))
