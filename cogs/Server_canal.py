@@ -77,18 +77,11 @@ class Server_Canal(commands.Cog):
                 mensagem = f'{membro.name} saiu do servidor. Já vai tarde!'
                 embed = discord.Embed(title=mensagem)
                 embed.set_thumbnail(url=membro.avatar.url if membro.avatar else discord.Embed.Empty)
-<<<<<<< HEAD
-                await canal.send(embed=embed)
-
-        
-    
-=======
                 await channel.send(embed=embed)
             else:
                 print(f"Canal de saída com ID {leave_channel_id} não encontrado.")
         else:
             print(f"Canal de saída não está configurado para o servidor '{membro.guild.name}'.")
 
->>>>>>> 6e6396b0d058c0584b67c22eef78a9a63edb09f8
 async def setup(bot):
     await bot.add_cog(Server_Canal(bot))
