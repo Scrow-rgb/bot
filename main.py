@@ -51,4 +51,4 @@ async def carregar_cogs():
             await bot.load_extension(f'cogs.{arquivo[:-3]}')
 
 
-bot.run('MTI3ODI0MzUwNTQ1MzY2MjI0Mg.GG4Fp9.VH3wKbAc6HFSRTySUuiaKmHUclV3cCPvk7bx4s')
+bot.run('SEU_TOKEN_AQUI')
