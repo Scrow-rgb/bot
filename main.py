@@ -15,21 +15,11 @@ bot = commands.Bot(command_prefix='/', intents=permissoes)
 logging.basicConfig(level=logging.DEBUG)
 
 
-
 @bot.event
 async def on_ready():
     await carregar_cogs()
     await bot.tree.sync()
     print(f'{bot.user} está online')
-
-# @bot.command()
-# async def sync(ctx:commands.Context):
-#     if ctx.author.id == 424351151534768128:
-#         server = discord.Object(id=1123842079169192016)
-#         sincs = await bot.tree.sync(guild=server)
-#         await ctx.reply(f'{len(sincs)} comandos sincronizados')
-#     else:
-#         await ctx.reply('Apenas o meu criador pode usar esse comando')
 
 @bot.event
 async def on_command_error(ctx: commands.Context, error):
